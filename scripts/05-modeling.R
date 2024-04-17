@@ -52,7 +52,8 @@ model_topic_prevalence <- brm(topic ~ 1,
                               cores = 4,
                               iter = 4000,
                               warmup = 1000,
-                              backend = "cmdstanr")
+                              backend = "cmdstanr",
+                              file = "models/topic_prevalence")
 
 epred_draws(model_topic_prevalence, newdata = tibble(topic = "Politics")) |> 
   median_qi() |> 
@@ -99,7 +100,8 @@ model_topic_gender <- brm(topic ~ first_author_gender,
                           cores = 4,
                           iter = 4000,
                           warmup = 1000,
-                          backend = "cmdstanr")
+                          backend = "cmdstanr",
+                          file = "models/model_topic_gender")
 
 plot_topic_gender_ame <- avg_slopes(model_topic_gender,
                                     variables = "first_author_gender", by = "group") |> 
