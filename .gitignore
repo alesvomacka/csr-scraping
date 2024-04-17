@@ -2,6 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-
 renv/*
 !renv/activate.R
+.DS_Store

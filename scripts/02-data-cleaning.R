@@ -39,10 +39,11 @@ articles <- articles |>
 first_names <- unique(articles$first_author)
 
 ## First try specifying Czech republic, to get better estimates
+## As of April 2024, there is a limit of 100 requests per day for free users.
+## Either split the names into two batches and run across 2 days or fork out $10.
 genders <- map(.x = first_names,
                ~request("https://api.genderize.io") |> 
                  req_url_query(name = .x, country_id = "CZ") |>
-                 req_throttle(rate = 1) |> 
                  req_perform()) |> 
   map(resp_body_json) %>% 
   map(~tibble(name = .$name,
@@ -51,7 +52,7 @@ genders <- map(.x = first_names,
   bind_rows()
 
 ## Few names are not Czech, run them separately
-names_nonczech <- genders_df |> 
+names_nonczech <- genders |> 
   filter(is.na(gender)) |> 
   pull(name)
 
@@ -59,7 +60,6 @@ names_nonczech <- genders_df |>
 genders_nonczech <- map(.x = names_nonczech,
                ~request("https://api.genderize.io") |> 
                  req_url_query(name = .x) |>
-                 req_throttle(rate = 1) |> 
                  req_perform()) |> 
   map(resp_body_json) %>% 
   map(~tibble(name = .$name,
@@ -67,7 +67,7 @@ genders_nonczech <- map(.x = names_nonczech,
               prob = .$probability,)) |> 
   bind_rows()
 
-articles <- genders_df |> 
+articles <- genders |> 
   filter(!is.na(gender)) |> 
   bind_rows(genders_nonczech) |> 
   select(-prob) |> 
@@ -85,5 +85,3 @@ articles$tags <- str_replace(articles$tags, pattern = "Klíčová slova: ", repl
 
 # Export data -------------------------------------------------------------
 write_csv(articles, "data-processed/articles.csv")
-
-

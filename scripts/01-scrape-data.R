@@ -3,6 +3,8 @@ library(tidyverse)
 library(rvest)
 library(polite)
 
+source("scripts/99-custom-functions.R")
+
 # Setting Polite Session --------------------------------------------------
 session <- bow("https://sreview.soc.cas.cz/archive.php")
 
