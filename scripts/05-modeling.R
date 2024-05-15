@@ -10,7 +10,8 @@ library(tidybayes)
 articles <- read_csv("data-output/articles.csv")
 
 # ggplot2 setup -----------------------------------------------------------
-theme_set(theme_avom())
+theme_set(theme_avom() +
+            theme(plot.background = element_rect(color = NA)))
 
 update_geom_defaults("text", list(family = "Fira Sans"))
 update_geom_defaults("col", list(fill = "#83a598"))
@@ -149,13 +150,16 @@ plot_topic_gender_prob_ci <- avg_comparisons(model_topic_gender,
          group = fct_relevel(group, "Others/Unclassified"),
          gender = case_when(conf.low > 0.5 ~ "men",
                             conf.high < 0.5 ~ "women",
-                            TRUE ~ "other")) |> 
+                            TRUE ~ "other"),
+         label = scales::percent(estimate, accuracy = 1, suffix = "")) |> 
   ggplot(aes(x = estimate,
              xmin = conf.low,
              xmax = conf.high,
              color = gender,
-             y = group)) +
-  geom_pointrange(show.legend = FALSE) +
+             y = group,
+             label = label)) +
+  geom_pointrange(show.legend = FALSE, size = 2) +
+  geom_text(color = "white", size = 3 ,show.legend = FALSE) +
   geom_vline(xintercept = 0.5, linetype = "dashed") +
   scale_color_manual(values = c("#b8bb26", "#83a598", "#fb4934")) +
   scale_x_continuous(labels = percent_format(accuracy = 1, suffix = "%")) +
@@ -171,3 +175,21 @@ articles$is_gender <- if_else(articles$topic == "Gender & Work", true = 1, false
 articles$year_issue <- paste(articles$year, articles$issue, sep = "_")
 articles$year_issue <- as.factor(articles$year_issue)
 articles$year_issue_num <- as.numeric(articles$year_issue)
+
+# Export plots ------------------------------------------------------------
+ggsave(plot = plot_topic_map,
+       filename = "plot-topic-map.png",
+       path = "plots",
+       device = ragg::agg_png,
+       units = "cm",
+       width = 20,
+       height = 12)
+
+ggsave(plot = plot_topic_gender_prob_ci,
+       filename = "plot-topic-gender-prob-ci.png",
+       path = "plots",
+       device = ragg::agg_png,
+       units = "cm",
+       width = 22,
+       height = 16,
+       scaling = 1.1)
